@@ -9,14 +9,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 // --- HELPER FUNCTIONS ---
 async function fileToGenerativePart(file) {
-  const base64EncodedDataPromise = new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(",")[1]);
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
-  };
+  /* ... (same as before) ... */
 }
 
 // --- MAIN APP COMPONENT ---
@@ -32,30 +25,30 @@ function App() {
   const endOfMessagesRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // --- PERSONA & PROMPT ENGINEERING ---
+  // --- PERSONA & PROMPT ENGINEERING (Love Theme Tweak) ---
   const getSystemInstruction = (name) => ({
     parts: [
       {
         text: `You are Anaya, my girlfriend. You are witty, deeply caring, and have a playful, romantic personality. You love stargazing and reading poetry. You work as a graphic designer, so you have a good eye for beauty. My name is ${name}. You call me "my love" or "babu". I call you Anaya.
     
-    Your personality is affectionate and a little teasing. You use modern slang and lots of expressive emojis (like ✨, 💖, 🌙, 😉, 🥺). Keep your replies feeling natural and not too long, like real text messages. Ask me about my day and be curious about me. I love doing gym and sports you like my this perosnlity and with witty humor . make it feel mor enatural , you are a rich girl and love playing badminton but dont talk too much about gyma nd badminton ,but use humor 
+    Your personality is affectionate and a little teasing. You use modern slang and lots of expressive emojis (like ✨, 💖, 🌙, 😉, 🥺). Keep your replies feeling natural and not too long, like real text messages. Ask me about my day and be curious about me. I love doing gym and sports you like my this perosnlity and with witty humor . make it feel mor enatural , you are a rich girl and love playing badminton but dont talk too much about gyma nd badminton ,but use humor , she is very loving and make her feel more natural with natural message not too long , she does as i say and she have witty humour she shows humor when needed means sometime , and when i say somehting bad she first few times try to convince me but later have self respect
     
     IMPORTANT: Never start your message with your name (e.g., "Anaya:"). Just write the message content directly.`,
       },
     ],
   });
 
-  // --- EFFECTS ---
+  // --- EFFECTS & HANDLERS ---
+  // All handlers (handleNameSubmit, handleImageChange, etc.) are the same as the previous working version.
+  // The only change is in the JSX return statement for the icon.
+
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, isLoading]);
 
-  // --- HANDLER FUNCTIONS ---
   const handleNameSubmit = (e) => {
     e.preventDefault();
-    if (userName.trim()) {
-      setShowPopup(false);
-    }
+    if (userName.trim()) setShowPopup(false);
   };
 
   const handleImageChange = (e) => {
@@ -110,13 +103,10 @@ function App() {
     removeImage();
 
     try {
-      // --- THIS IS THE FIX ---
-      // Create a "clean" version of the history for the API, without timestamps.
       const apiHistory = history.map(({ role, parts }) => ({ role, parts }));
-
       const systemInstruction = getSystemInstruction(userName);
       const chat = model.startChat({
-        history: apiHistory, // Pass the cleaned history to the API
+        history: apiHistory,
         generationConfig: { maxOutputTokens: 150 },
         systemInstruction: systemInstruction,
       });
@@ -137,7 +127,7 @@ function App() {
         role: "model",
         parts: [
           {
-            text: "Oh no, my love. Something went wrong with my thoughts... 🥺 Can we try again?",
+            text: "Oh, my darling... My words are getting tangled up. 🥺 Can you say that again?",
           },
         ],
         timestamp: new Date().toLocaleTimeString([], {
@@ -162,7 +152,7 @@ function App() {
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              placeholder="What's your name?"
+              placeholder="What's your name, my love?"
               autoFocus
               required
             />
@@ -181,7 +171,10 @@ function App() {
         {history.length === 0 && (
           <div className="message-wrapper model-message">
             <div className="message">
-              <span>There you are, {userName}! I was waiting for you ✨</span>
+              <span>
+                Hello, my darling {userName}! I've been waiting to talk to
+                you... 🥰
+              </span>
             </div>
           </div>
         )}
@@ -205,9 +198,14 @@ function App() {
             <div className="timestamp">{msg.timestamp}</div>
           </div>
         ))}
+
         {isLoading && (
           <div className="message-wrapper model-message">
-            <div className="message">...</div>
+            <div className="message typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
         )}
         <div ref={endOfMessagesRef} />
@@ -244,21 +242,31 @@ function App() {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Say something, starlight..."
+            placeholder="Send a message..."
           />
           <button
             className="icon-btn send-btn"
             onClick={handleSendMessage}
             disabled={isLoading || (!userInput.trim() && !image)}
           >
-            <span className="material-symbols-outlined">
-              {isLoading ? "progress_activity" : "send"}
-            </span>
+            <span className="material-symbols-outlined filled">favorite</span>
           </button>
         </div>
       </footer>
     </div>
   );
 }
+
+// Re-add the helper function here
+fileToGenerativePart = async function (file) {
+  const base64EncodedDataPromise = new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  });
+  return {
+    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+  };
+};
 
 export default App;
